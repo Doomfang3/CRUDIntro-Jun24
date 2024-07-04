@@ -1,7 +1,9 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 
-const AddProjectPage = () => {
+const UpdateProjectPage = () => {
+  const { projectId } = useParams()
+
   const navigate = useNavigate()
 
   const [formInput, setFormInput] = useState({
@@ -18,28 +20,49 @@ const AddProjectPage = () => {
 
   const handleSubmit = async event => {
     event.preventDefault()
+
     const payload = formInput
 
     try {
       const response = await fetch(
-        'https://project-management-api-4641927fee65.herokuapp.com/projects',
+        `https://project-management-api-4641927fee65.herokuapp.com/projects/${projectId}`,
         {
-          method: 'POST',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),
         }
       )
-      if (response.status === 201) {
-        const projectData = await response.json()
-        console.log(projectData)
-        navigate(`/projects/${projectData.id}`)
+      if (response.status === 200) {
+        navigate(`/projects/${projectId}`)
       }
     } catch (error) {
       console.log(error)
     }
   }
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        const response = await fetch(
+          `https://project-management-api-4641927fee65.herokuapp.com/projects/${projectId}`
+        )
+
+        if (!response.ok) {
+          throw new Error('Response not ok', response)
+        }
+
+        const data = await response.json()
+        delete data.id
+        setFormInput(data)
+      } catch (error) {
+        console.log('error: ', error)
+      }
+    }
+
+    fetchDetails()
+  }, [])
 
   return (
     <form onSubmit={handleSubmit}>
@@ -62,4 +85,4 @@ const AddProjectPage = () => {
   )
 }
 
-export default AddProjectPage
+export default UpdateProjectPage
